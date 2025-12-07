@@ -1,0 +1,63 @@
+package main
+
+import "time"
+
+// 投稿データの型定義（Viewで使うため）
+type Post struct {
+	ID        int
+	Name      string
+	Content   string
+	CreatedAt time.Time
+}
+
+// 全体のページレイアウト
+templ Page(posts []Post) {
+	<html>
+		<head>
+			<title>Go HTMX BBS</title>
+			<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+			<script src="https://cdn.tailwindcss.com"></script>
+		</head>
+		<body class="bg-gray-100 p-8">
+			<div class="max-w-2xl mx-auto">
+				<h1 class="text-3xl font-bold mb-6 text-blue-600">コメント</h1>
+				
+				<form hx-post="/post" hx-target="#post-list" hx-swap="afterbegin" hx-on::after-request="this.reset()" class="bg-white p-6 rounded-lg shadow mb-8">
+					<div class="mb-4">
+						<label class="block text-gray-700 font-bold mb-2">お名前</label>
+						<input type="text" name="name" class="w-full border p-2 rounded" required />
+					</div>
+					<div class="mb-4">
+						<label class="block text-gray-700 font-bold mb-2">メッセージ</label>
+						<textarea name="content" class="w-full border p-2 rounded h-24" required></textarea>
+					</div>
+					<button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">投稿する</button>
+				</form>
+
+        // 投稿リスト表示エリア
+        <div id="post-list" 
+            class="space-y-4"
+            hx-get="/posts" 
+            hx-trigger="every 2s" 
+            hx-swap="innerHTML">
+            
+            // 初回表示用
+            for _, post := range posts {
+                @PostItem(post)
+            }
+        </div>
+			</div>
+		</body>
+	</html>
+}
+
+// 投稿ひとつ分のコンポーネント
+templ PostItem(post Post) {
+	<div class="bg-white p-4 rounded shadow border-l-4 border-blue-500 animate-fade-in">
+		<div class="flex justify-between items-center mb-2">
+			<span class="font-bold text-lg">{ post.Name }</span>
+			<span class="text-gray-400 text-sm">{ post.CreatedAt.Format("15:04:05") }</span>
+		</div>
+		<p class="text-gray-700 whitespace-pre-wrap">{ post.Content }</p>
+	</div>
+}
